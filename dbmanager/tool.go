@@ -21,6 +21,6 @@ func initDB(saddr SqlAddress) (*sql.DB, error) {
 		fmt.Println("open database fail")
 		return nil, err
 	}
-	fmt.Println("connnect success")
+	fmt.Println("connnect success(IP:PORT : " + saddr.Ip + ":" + saddr.Port + ")")
 	return DB, nil
 }
