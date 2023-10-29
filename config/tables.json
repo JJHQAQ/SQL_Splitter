@@ -1,0 +1,10 @@
+[
+    {
+        "name": "customer",
+        "mode": "h",
+        "sites": [
+            "site1",
+            "site2"
+        ]
+    }
+]

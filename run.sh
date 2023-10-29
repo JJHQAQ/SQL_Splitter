@@ -2,9 +2,11 @@
 ETCD='127.0.0.1:20002'
 
 # test flag
-TEST=true
+# TEST='-test'
+TEST=''
+CONF='config/'
 
-go run main.go  \
-    -test $TEST \
-    -etcd $ETCD 
+go run main.go $TEST -etcd $ETCD -conf $CONF
+
+
 

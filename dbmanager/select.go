@@ -6,70 +6,57 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/xwb1989/sqlparser"
 )
 
 func (dbmp *DBM) Select(sql_s string) {
 	if util.Test {
 		return
 	}
-	//Parse sql_s
 
-	//if 水平分片
-	items := dbmp.horizontal_fragmentation(sql_s)
+	// function Parse parses the sql statement into a tree
+	tree, _ := sqlparser.Parse(sql_s)
+	for _, table := range tree.(*sqlparser.Select).From {
+		table_name := sqlparser.GetTableName(table.(*sqlparser.AliasedTableExpr).Expr) //获取表名
 
-	for _, x := range items {
-		fmt.Println(x)
-	}
+		if dbmp.tables[table_name.String()].Mode == "h" { //水平分片
+			items := dbmp.horizontal_fragmentation(sql_s, table_name.String())
+			for _, x := range items {
+				fmt.Println(x)
+			}
+		}
+		if dbmp.tables[table_name.String()].Mode == "v" { //垂直分片
+			//TODO
+		}
 
-	//if 垂直分片
-	items = dbmp.vertical_fragmentation(sql_s)
-
-	for _, x := range items {
-		fmt.Println(x)
 	}
 
 }
 
-func (dbmp *DBM) horizontal_fragmentation(sql_s string) []datatype.Book {
-	var books []datatype.Book
-
-	// for 每个分片
-	rows, e := dbmp.Databases[0].Query("select * from book where id<=200025")
-	if e == nil {
-		// errors.New("query incur error")
-	}
-	for rows.Next() {
-		var book datatype.Book
-		e := rows.Scan(&book.Id, &book.Title, &book.Authors, &book.Publisher_id, &book.Copies)
-		if e == nil {
-			// fmt.Println(book)
-			// json.Unmarshal(book)
-			// jbyte, _ := json.Marshal(book)
-			// fmt.Println(string(jbyte))
-			books = append(books, book)
-		} else {
-			fmt.Println(e)
+// TODO 加更多的表类型，以及改成泛型func
+func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) []datatype.Customer {
+	if TableName == "customer" {
+		var customers []datatype.Customer
+		for _, site := range dbmp.tables[TableName].Sites {
+			rows, e := dbmp.Databases[site].Query(sql_s)
+			if e != nil {
+				// do something
+			}
+			for rows.Next() {
+				var customer datatype.Customer
+				e := rows.Scan(&customer.Id, &customer.Name, &customer.Gender)
+				if e == nil {
+					customers = append(customers, customer)
+				} else {
+					fmt.Println(e)
+				}
+			}
+			rows.Close()
 		}
+		return customers
 	}
-	rows.Close()
 
-	rows, e = dbmp.Databases[1].Query("select * from book where id>200025 and id<200050")
-	for rows.Next() {
-		var book datatype.Book
-		e := rows.Scan(&book.Id, &book.Title, &book.Authors, &book.Publisher_id, &book.Copies)
-		if e == nil {
-			// fmt.Println(book)
-			// json.Unmarshal(book)
-			// jbyte, _ := json.Marshal(book)
-			// fmt.Println(string(jbyte))
-			books = append(books, book)
-		} else {
-			fmt.Println(e)
-		}
-	}
-	rows.Close()
-
-	return books
+	return nil
 }
 
 func (dbmp *DBM) vertical_fragmentation(sql_s string) []datatype.Book {
