@@ -75,8 +75,8 @@ func (dbmp *DBM) init_mysql() {
 	var saddrs []SqlAddress
 	//TODO 从配置文件global.json或者从etcd读取
 	saddrs = []SqlAddress{
-		SqlAddress{"site1", "root", "123456", "127.0.0.1", "3307", "orderDB"},
-		SqlAddress{"site2", "root", "123456", "127.0.0.1", "3306", "orderDB"},
+		SqlAddress{"site1", "root", "123456", "127.0.0.1", "3307", "DDB"},
+		SqlAddress{"site2", "root", "123456", "127.0.0.1", "3308", "DDB2"},
 	}
 
 	for _, addr := range saddrs {
