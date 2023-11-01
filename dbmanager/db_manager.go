@@ -14,6 +14,7 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
+// MySQL数据库的连接详情
 type SqlAddress struct {
 	Site_name string
 	UserName  string
@@ -23,25 +24,28 @@ type SqlAddress struct {
 	DbName    string
 }
 
+// 数据库表，包括表名、模式和关联的站点
 type Table struct {
 	Name  string   `json:"name"`
 	Mode  string   `json:"mode"`
 	Sites []string `json:"sites"`
 }
 
+// 管理数据库连接和表配置信息。
 type DBM struct {
-	Databases map[string]*sql.DB
-	etcdbar   *clientv3.Client
+	Databases map[string]*sql.DB // 站点名字到数据库的映射
+	etcdbar   *clientv3.Client   //
 
-	tables map[string]Table
+	tables map[string]Table // 表名字到数据库表的映射
 }
 
+// 从JSON文件中读取表配置信息，并将其填充到tables映射中。
 func (dbmp *DBM) init_conf() {
 	file, err := os.Open(util.Conf_path + "tables.json")
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer file.Close() // 确保在函数执行结束时关闭文件
 	byteValue, _ := ioutil.ReadAll(file)
 	var tables []Table
 	json.Unmarshal(byteValue, &tables)
@@ -50,6 +54,8 @@ func (dbmp *DBM) init_conf() {
 	}
 
 }
+
+// 初始化一个etcd客户端连接。
 func (dbmp *DBM) init_etcd() {
 	//TODO 这里啥也没干
 	if util.Test {
@@ -71,12 +77,13 @@ func (dbmp *DBM) init_etcd() {
 	dbmp.etcdbar = cli
 }
 
+// 基于提供的SqlAddress实例初始化MySQL数据库连接，并将其存储在Databases映射中。
 func (dbmp *DBM) init_mysql() {
 	var saddrs []SqlAddress
 	//TODO 从配置文件global.json或者从etcd读取
 	saddrs = []SqlAddress{
-		SqlAddress{"site1", "root", "123456", "127.0.0.1", "3307", "DDB"},
-		SqlAddress{"site2", "root", "123456", "127.0.0.1", "3308", "DDB2"},
+		{"site1", "root", "123456", "127.0.0.1", "3307", "orderDB"},
+		{"site2", "root", "123456", "127.0.0.1", "3308", "orderDB"},
 	}
 
 	for _, addr := range saddrs {
@@ -98,11 +105,16 @@ func (dbmp *DBM) init() {
 
 }
 
+// 解析输入的SQL字符串，确定其类型（当前仅处理SELECT语句），并将执行委托给特定的方法
 func (dbmp *DBM) Do(sql_s string) {
 	class_code := sqlparser.Preview(sql_s)
 	if sqlparser.StmtType(class_code) == "SELECT" {
 		dbmp.Select(sql_s)
+	} else if sqlparser.StmtType(class_code) == "INSERT" {
+		// TODO
+		//dbmp.Insert(sql_s)
 	}
+
 }
 
 func New_DBM() *DBM {

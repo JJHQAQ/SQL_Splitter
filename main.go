@@ -23,8 +23,9 @@ func main() {
 
 	for {
 		//Input the SQL
-		SQL_s := "select * from customer where id<300050"
-
+		// SQL_s := "select * from customer where id<300050"
+		// SQL_s := "select * from book where publisher_id<300050"
+		SQL_s := "select title from book where publisher_id<300050"
 		dbm.Do(SQL_s)
 
 		break
