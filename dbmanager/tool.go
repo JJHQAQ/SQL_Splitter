@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"SQL_Splitter/datatype"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -23,4 +24,21 @@ func initDB(saddr SqlAddress) (*sql.DB, error) {
 	}
 	fmt.Println("mysql connnect success(IP:PORT : " + saddr.Ip + ":" + saddr.Port + ")")
 	return DB, nil
+}
+
+func PrintAll(items interface{}) {
+	switch items.(type) {
+	case []datatype.Customer:
+		for _, x := range items.([]datatype.Customer) {
+			fmt.Println(x)
+		}
+	case []datatype.Orders:
+		for _, x := range items.([]datatype.Orders) {
+			fmt.Println(x)
+		}
+	case []datatype.Publishers:
+		for _, x := range items.([]datatype.Publishers) {
+			fmt.Println(x)
+		}
+	}
 }

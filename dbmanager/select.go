@@ -21,16 +21,12 @@ func (dbmp *DBM) Select(sql_s string) {
 
 		if dbmp.tables[table_name.String()].Mode == "h" { //水平分片
 			items := dbmp.horizontal_fragmentation(sql_s, table_name.String())
-			for _, x := range items {
-				fmt.Println(x)
-			}
+			PrintAll(items)
 		}
 		if dbmp.tables[table_name.String()].Mode == "v" { //垂直分片
 			//TODO
 			items := dbmp.vertical_fragmentation(sql_s, table_name.String())
-			for _, x := range items {
-				fmt.Println(x)
-			}
+			PrintAll(items)
 
 		}
 
@@ -40,7 +36,8 @@ func (dbmp *DBM) Select(sql_s string) {
 
 // TODO 加更多的表类型，以及改成泛型func
 // Customer
-func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) []datatype.Customer {
+func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) interface{} {
+	//customer
 	if TableName == "customer" {
 		var customers []datatype.Customer
 		for _, site := range dbmp.tables[TableName].Sites {
@@ -61,10 +58,7 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) []data
 		}
 		return customers
 	}
-	return nil
-}
-
-func (dbmp *DBM) horizontal_fragmentation_orders(sql_s string, TableName string) []datatype.Orders {
+	//orders
 	if TableName == "orders" {
 		var orders []datatype.Orders
 		for _, site := range dbmp.tables[TableName].Sites {
@@ -85,11 +79,7 @@ func (dbmp *DBM) horizontal_fragmentation_orders(sql_s string, TableName string)
 		}
 		return orders
 	}
-	return nil
-}
-
-// Publishers
-func (dbmp *DBM) horizontal_fragmentation_publishers(sql_s string, TableName string) []datatype.Publishers {
+	//publishers
 	if TableName == "publishers" {
 		var publishers []datatype.Publishers
 		for _, site := range dbmp.tables[TableName].Sites {
