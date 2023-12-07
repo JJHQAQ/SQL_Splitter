@@ -14,3 +14,6 @@
     多表连接测试
 6. select customer.name from customer,orders
    where customer.id = orders.customer_id
+   多表连接测试
+
+

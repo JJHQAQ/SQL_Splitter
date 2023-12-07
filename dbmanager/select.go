@@ -136,8 +136,8 @@ func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) []dataty
 		}
 	}
 
-	select_from_book1 += " from book1"
-	select_from_book2 += " from book2"
+	select_from_book1 += " from book"
+	select_from_book2 += " from book"
 
 	predicates := util.Predicates(sql_s)
 	book1_has_predicate := false

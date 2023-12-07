@@ -14,5 +14,21 @@
         "Ip": "127.0.0.1",
         "Port":"3306",
         "DbName":"orderDB"
+    },
+    {
+        "Site_name" : "site3",
+        "UserName" : "root",
+        "Password" : "123456",
+        "Ip": "127.0.0.1",
+        "Port":"3308",
+        "DbName":"orderDB"
+    },
+    {
+        "Site_name" : "site4",
+        "UserName" : "root",
+        "Password" : "123456",
+        "Ip": "127.0.0.1",
+        "Port":"3309",
+        "DbName":"orderDB"
     }
 ]
