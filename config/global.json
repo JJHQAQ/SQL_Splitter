@@ -1,6 +1,18 @@
-{
-    "Mysql_dbaddr":[
-        "127.0.0.1:3307",
-        "127.0.0.1:3306"
-    ]
-}
+[
+    {
+        "Site_name" : "site1",
+        "UserName" : "root",
+        "Password" : "123456",
+        "Ip": "127.0.0.1",
+        "Port":"3307",
+        "DbName":"orderDB"
+    },
+    {
+        "Site_name" : "site2",
+        "UserName" : "root",
+        "Password" : "123456",
+        "Ip": "127.0.0.1",
+        "Port":"3306",
+        "DbName":"orderDB"
+    }
+]

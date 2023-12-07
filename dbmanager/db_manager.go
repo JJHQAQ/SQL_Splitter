@@ -37,10 +37,13 @@ type DBM struct {
 	etcdbar   *clientv3.Client   //
 
 	tables map[string]Table // 表名字到数据库表的映射
+	addrs  []SqlAddress     //站点名字到站点地址的映射
 }
 
 // 从JSON文件中读取表配置信息，并将其填充到tables映射中。
 func (dbmp *DBM) init_conf() {
+
+	//读取tabels.json
 	file, err := os.Open(util.Conf_path + "tables.json")
 	if err != nil {
 		panic(err)
@@ -52,6 +55,17 @@ func (dbmp *DBM) init_conf() {
 	for _, x := range tables {
 		dbmp.tables[x.Name] = x
 	}
+
+	//读取global.json
+	fileG, errG := os.Open(util.Conf_path + "global.json")
+	if errG != nil {
+		panic(errG)
+	}
+	defer fileG.Close()
+
+	byteValue, _ = ioutil.ReadAll(fileG)
+
+	json.Unmarshal(byteValue, &dbmp.addrs)
 
 }
 
@@ -79,14 +93,8 @@ func (dbmp *DBM) init_etcd() {
 
 // 基于提供的SqlAddress实例初始化MySQL数据库连接，并将其存储在Databases映射中。
 func (dbmp *DBM) init_mysql() {
-	var saddrs []SqlAddress
-	//TODO 从配置文件global.json或者从etcd读取
-	saddrs = []SqlAddress{
-		{"site1", "root", "123456", "127.0.0.1", "3307", "orderDB"},
-		{"site2", "root", "123456", "127.0.0.1", "3308", "orderDB"},
-	}
 
-	for _, addr := range saddrs {
+	for _, addr := range dbmp.addrs {
 		db, err := initDB(addr)
 		if err != nil {
 			fmt.Println(err)
