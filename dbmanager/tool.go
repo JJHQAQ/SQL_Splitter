@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func initDB(saddr SqlAddress) (*sql.DB, error) {
+func initDB(saddr datatype.SqlAddress) (*sql.DB, error) {
 	var DB *sql.DB
 	//构建连接："用户名:密码@tcp(IP:端口)/数据库?charset=utf8"
 	path := strings.Join([]string{saddr.UserName, ":", saddr.Password, "@tcp(", saddr.Ip, ":", saddr.Port, ")/", saddr.DbName, "?charset=utf8"}, "")
@@ -27,17 +27,17 @@ func initDB(saddr SqlAddress) (*sql.DB, error) {
 }
 
 func PrintAll(items interface{}) {
-	switch items.(type) {
+	switch its := items.(type) {
 	case []datatype.Customer:
-		for _, x := range items.([]datatype.Customer) {
+		for _, x := range its {
 			fmt.Println(x)
 		}
 	case []datatype.Orders:
-		for _, x := range items.([]datatype.Orders) {
+		for _, x := range its {
 			fmt.Println(x)
 		}
 	case []datatype.Publishers:
-		for _, x := range items.([]datatype.Publishers) {
+		for _, x := range its {
 			fmt.Println(x)
 		}
 	}

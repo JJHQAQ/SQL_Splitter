@@ -14,20 +14,39 @@ func (dbmp *DBM) Select(sql_s string) {
 		return
 	}
 
+	result := make(map[string]interface{})
+
 	// function Parse parses the sql statement into a tree
-	tree, _ := sqlparser.Parse(sql_s)
-	for _, table := range tree.(*sqlparser.Select).From {
-		table_name := sqlparser.GetTableName(table.(*sqlparser.AliasedTableExpr).Expr) //获取表名
+	stmt, err := sqlparser.Parse(sql_s)
+	if err != nil {
+		fmt.Println("SQL解析失败: ", err)
+		return
+	}
+	tree, ok := stmt.(*sqlparser.Select)
+	if !ok {
+		fmt.Println(ok)
+		return
+	}
 
-		if dbmp.tables[table_name.String()].Mode == "h" { //水平分片
-			items := dbmp.horizontal_fragmentation(sql_s, table_name.String())
-			PrintAll(items)
+	sql_no_join := util.Join_fileter(sql_s, dbmp.tables)
+
+	fmt.Println(sql_no_join)
+	for i, table := range tree.From {
+		table_name := sqlparser.GetTableName(table.(*sqlparser.AliasedTableExpr).Expr).String() //获取表名
+
+		table_sql := util.Table_filter(sql_no_join, i, dbmp.tables[table_name].Columns)
+		fmt.Println(dbmp.tables[table_name].Columns)
+		fmt.Println(table_sql)
+
+		if dbmp.tables[table_name].Mode == "h" { //水平分片
+			items := dbmp.horizontal_fragmentation(table_sql, table_name)
+			result[table_name] = items
+			// PrintAll(items)
 		}
-		if dbmp.tables[table_name.String()].Mode == "v" { //垂直分片
-			//TODO
-			items := dbmp.vertical_fragmentation(sql_s, table_name.String())
-			PrintAll(items)
-
+		if dbmp.tables[table_name].Mode == "v" { //垂直分片
+			items := dbmp.vertical_fragmentation(table_sql, table_name)
+			// PrintAll(items)
+			result[table_name] = items
 		}
 
 	}
@@ -44,6 +63,8 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) interf
 			rows, e := dbmp.Databases[site].Query(sql_s)
 			if e != nil {
 				// do something
+				fmt.Println(e)
+				return nil
 			}
 			for rows.Next() {
 				var customer datatype.Customer
@@ -64,7 +85,8 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) interf
 		for _, site := range dbmp.tables[TableName].Sites {
 			rows, e := dbmp.Databases[site].Query(sql_s)
 			if e != nil {
-				// do something
+				fmt.Println(e)
+				return nil
 			}
 			for rows.Next() {
 				var order datatype.Orders
@@ -85,7 +107,8 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) interf
 		for _, site := range dbmp.tables[TableName].Sites {
 			rows, e := dbmp.Databases[site].Query(sql_s)
 			if e != nil {
-				// do something
+				fmt.Println(e)
+				return nil
 			}
 			for rows.Next() {
 				var publisher datatype.Publishers

@@ -6,6 +6,11 @@
             "site1",
             "site2",
             "site3"
+        ],
+        "columns":[
+            "id",
+            "name",
+            "gender"
         ]
     },
     {
@@ -14,6 +19,12 @@
         "sites": [
             "site1",
             "site2"
+        ],
+        "columns":[
+            "id",
+            "authors",
+            "publisher_id",
+            "copies"
         ]
     },
     {
@@ -24,6 +35,11 @@
             "site2",
             "site3",
             "site4"
+        ],
+        "columns":[
+            "customer_id",
+            "book_id",
+            "quantity"
         ]
     },
     {
@@ -34,6 +50,11 @@
             "site2",
             "site3",
             "site4"
+        ],
+        "columns":[
+            "id",
+            "name",
+            "state"
         ]
     }
 ]

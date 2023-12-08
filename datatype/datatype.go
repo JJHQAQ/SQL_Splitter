@@ -27,3 +27,21 @@ type Publishers struct {
 	Name  string
 	State string // GA:49%,CA:51%
 }
+
+// 数据库表，包括表名、模式和关联的站点
+type Table struct {
+	Name    string   `json:"name"`
+	Mode    string   `json:"mode"`
+	Sites   []string `json:"sites"`
+	Columns []string `json:"columns"`
+}
+
+// MySQL数据库的连接详情
+type SqlAddress struct {
+	Site_name string
+	UserName  string
+	Password  string
+	Ip        string
+	Port      string
+	DbName    string
+}

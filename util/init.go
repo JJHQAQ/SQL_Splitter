@@ -20,7 +20,3 @@ func Init() {
 	flag.Parse()
 
 }
-
-func Init_DB() {
-	return
-}

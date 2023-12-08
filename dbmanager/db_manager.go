@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"SQL_Splitter/datatype"
 	"SQL_Splitter/util"
 	"database/sql"
 	"encoding/json"
@@ -14,30 +15,13 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-// MySQL数据库的连接详情
-type SqlAddress struct {
-	Site_name string
-	UserName  string
-	Password  string
-	Ip        string
-	Port      string
-	DbName    string
-}
-
-// 数据库表，包括表名、模式和关联的站点
-type Table struct {
-	Name  string   `json:"name"`
-	Mode  string   `json:"mode"`
-	Sites []string `json:"sites"`
-}
-
 // 管理数据库连接和表配置信息。
 type DBM struct {
 	Databases map[string]*sql.DB // 站点名字到数据库的映射
 	etcdbar   *clientv3.Client   //
 
-	tables map[string]Table // 表名字到数据库表的映射
-	addrs  []SqlAddress     //站点名字到站点地址的映射
+	tables map[string]datatype.Table // 表名字到数据库表的映射
+	addrs  []datatype.SqlAddress     //站点名字到站点地址的映射
 }
 
 // 从JSON文件中读取表配置信息，并将其填充到tables映射中。
@@ -50,9 +34,14 @@ func (dbmp *DBM) init_conf() {
 	}
 	defer file.Close() // 确保在函数执行结束时关闭文件
 	byteValue, _ := ioutil.ReadAll(file)
-	var tables []Table
+	var tables []datatype.Table
 	json.Unmarshal(byteValue, &tables)
 	for _, x := range tables {
+		var temp_columns []string
+		for _, col := range x.Columns {
+			temp_columns = append(temp_columns, x.Name+"."+col)
+		}
+		x.Columns = append(x.Columns, temp_columns...)
 		dbmp.tables[x.Name] = x
 	}
 
@@ -105,7 +94,7 @@ func (dbmp *DBM) init_mysql() {
 }
 
 func (dbmp *DBM) init() {
-	dbmp.tables = make(map[string]Table)
+	dbmp.tables = make(map[string]datatype.Table)
 	dbmp.Databases = make(map[string]*sql.DB)
 	dbmp.init_conf()
 	dbmp.init_etcd()
@@ -120,7 +109,7 @@ func (dbmp *DBM) Do(sql_s string) {
 		dbmp.Select(sql_s)
 	} else if sqlparser.StmtType(class_code) == "INSERT" {
 		// TODO
-		//dbmp.Insert(sql_s)
+		dbmp.Insert(sql_s)
 	}
 
 }
