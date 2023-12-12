@@ -71,7 +71,7 @@ func (dbmp *DBM) init_etcd() {
 	// 创建etcd客户端
 	cli, err := clientv3.New(cfg)
 	if err != nil {
-		fmt.Printf("创建etcd客户端失败：%v \n", err)
+		fmt.Printf("创建etcd客户端失败:%v \n", err)
 		return
 	} else {
 		fmt.Println("连接etcd成功! (" + util.EtcdAddr + ")")
@@ -110,6 +110,8 @@ func (dbmp *DBM) Do(sql_s string) {
 	} else if sqlparser.StmtType(class_code) == "INSERT" {
 		// TODO
 		dbmp.Insert(sql_s)
+	} else if sqlparser.StmtType(class_code) == "DELETE" {
+		dbmp.Delete(sql_s)
 	}
 
 }
