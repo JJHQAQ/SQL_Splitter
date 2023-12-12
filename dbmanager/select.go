@@ -209,6 +209,7 @@ func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]datat
 		book1_has_predicate := false
 		book2_has_predicate := false
 		for _, predicate := range predicates {
+			// Predicate triplet
 			column, operator, value := util.Extract_predicate_info(predicate)
 			if util.Contains(column_book1, column) {
 				if !book1_has_predicate {
@@ -274,6 +275,7 @@ func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]datat
 				fmt.Println("Error querying site2:", err2)
 				return nil, 0, 0, nil
 			}
+			// 当前函数执行结束时关闭 rowsBook2
 			defer rowsBook2.Close()
 
 			// Process rowsBook2 and append to books

@@ -4,6 +4,7 @@ import (
 	"SQL_Splitter/datatype"
 	"fmt"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/xwb1989/sqlparser"
 )
 
@@ -200,4 +201,62 @@ func All_expr() sqlparser.SelectExprs {
 		all_expr = temp_tree.SelectExprs
 	}
 	return all_expr
+}
+
+// get insert table name and values
+func Get_insert_msg(sql string) (string, []string, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return "", nil, err
+	}
+
+	insertStmt, ok := stmt.(*sqlparser.Insert)
+	if !ok {
+		return "", nil, fmt.Errorf("not an INSERT statement")
+	}
+	var values []string
+	for _, row := range insertStmt.Rows.(sqlparser.Values) {
+		for _, val := range row {
+			values = append(values, sqlparser.String(val))
+		}
+	}
+	return insertStmt.Table.Name.String(), values, nil
+}
+
+func Handle_err(err error) {
+	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok { //"github.com/go-sql-driver/mysql"
+			switch mysqlErr.Number {
+			case 1451, 1452:
+				fmt.Println("Violation of referential integrity constraint:", mysqlErr.Message)
+			default:
+				fmt.Println("SQL error:", mysqlErr.Message)
+			}
+		} else {
+			fmt.Println("Other error:", err)
+		}
+	}
+}
+
+func Get_delete_table(sql string) (string, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return "", err
+	}
+
+	deleteStmt, ok := stmt.(*sqlparser.Delete)
+	if !ok {
+		return "", fmt.Errorf("not a DELETE statement")
+	}
+
+	if len(deleteStmt.TableExprs) == 0 {
+		return "", fmt.Errorf("no table found in DELETE statement")
+	}
+
+	tableExpr := deleteStmt.TableExprs[0]
+	if table, ok := tableExpr.(*sqlparser.AliasedTableExpr); ok {
+		return sqlparser.String(table.Expr), nil
+	}
+
+	return "", fmt.Errorf("could not extract table name from DELETE statement")
 }

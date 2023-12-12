@@ -15,7 +15,7 @@ var (
 func Init() {
 	flag.BoolVar(&Test, "test", false, "debug use")
 	flag.StringVar(&EtcdAddr, "etcd", "127.0.0.1:20002", "set etcdaddr")
-	flag.StringVar(&Conf_path, "conf", "./config/conf.json", "配置文件路径")
+	flag.StringVar(&Conf_path, "conf", "./config/", "配置文件路径")
 
 	flag.Parse()
 
