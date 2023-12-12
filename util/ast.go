@@ -201,3 +201,18 @@ func All_expr() sqlparser.SelectExprs {
 	}
 	return all_expr
 }
+
+// get insert table name
+func Get_insert_table(sql string) (string, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return "", err
+	}
+
+	insertStmt, ok := stmt.(*sqlparser.Insert)
+	if !ok {
+		return "", fmt.Errorf("not an INSERT statement")
+	}
+
+	return insertStmt.Table.Name.String(), nil
+}
