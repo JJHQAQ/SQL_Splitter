@@ -213,6 +213,13 @@ func Get_insert_table(sql string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("not an INSERT statement")
 	}
-
+	var values [][]string
+	for _, row := range insertStmt.Rows.(sqlparser.Values) {
+		var valueRow []string
+		for _, val := range row {
+			valueRow = append(valueRow, sqlparser.String(val))
+		}
+		values = append(values, valueRow)
+	}
 	return insertStmt.Table.Name.String(), nil
 }

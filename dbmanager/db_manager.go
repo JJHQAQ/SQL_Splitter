@@ -120,3 +120,25 @@ func New_DBM() *DBM {
 	dbmp.init()
 	return dbmp
 }
+
+/*
+// 判断sql语句的类型
+func GetSQL_type(sql string) (string, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return "", err
+	}
+
+	switch stmt.(type) {
+	case *sqlparser.Select:
+		return "SELECT", nil
+	case *sqlparser.Insert:
+		return "INSERT", nil
+	case *sqlparser.Delete:
+		return "DELETE", nil
+	// 可以根据需要添加更多类型
+	default:
+		return "", fmt.Errorf("unknown SQL type")
+	}
+}
+*/
