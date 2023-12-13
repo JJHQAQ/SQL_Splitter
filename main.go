@@ -43,11 +43,11 @@ func main() {
 		// SQL_s := "select * from book,publisher where book.publisher_id = publisher.id and publisher.name= 'Twomorrows Publishing' and book.copies>6000"
 		//dbm.Do(SQL_s)
 
-		SQL_s := "insert into book values (290001, 'Defence Against Dark Arts', 'Jennifer Kanye', 12000, 2000)"
+		SQL_s := "delete from book where title='Maria\\'s Diary (Plus S.)' and copies = 5991;"
 
 		dbm.Do(SQL_s)
 
-		fmt.Println("Error:!!!")
+		fmt.Println("Success:!!!")
 		break
 
 	}

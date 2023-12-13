@@ -58,8 +58,7 @@ func (dbmp *DBM) Insert(sql_s string) State {
 			fmt.Println("The type of value does not match:", err)
 			return FAILED
 		}
-		if id_num < 305000 {
-
+		if id_num <= 305000 {
 			_, err := dbmp.Databases["site1"].Exec(sql_s)
 			util.Handle_err(err)
 			fmt.Println("Site involved: site1.")

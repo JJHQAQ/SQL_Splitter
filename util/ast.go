@@ -56,7 +56,7 @@ func Contains(slice []string, target string) bool {
 	return false
 }
 
-// get predicates through sql
+// get select predicates through sql
 func Predicates(sql string) []sqlparser.Expr {
 	stmt, err := sqlparser.Parse(sql)
 	if err != nil {
@@ -259,4 +259,43 @@ func Get_delete_table(sql string) (string, error) {
 	}
 
 	return "", fmt.Errorf("could not extract table name from DELETE statement")
+}
+
+func Get_delete_predicates(sql string) []sqlparser.Expr {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		fmt.Println("Error parsing SQL:", err)
+		return nil
+	}
+
+	deleteStmt, ok := stmt.(*sqlparser.Delete)
+	if !ok {
+		fmt.Println("Not a DELETE statement")
+		return nil
+	}
+
+	var predicates []sqlparser.Expr
+	if deleteStmt.Where != nil {
+		predicates = Get_predicates(deleteStmt.Where.Expr)
+	}
+	return predicates
+}
+
+// get delete clause where
+func Get_delete_where(sql string) (string, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return "", err
+	}
+
+	deleteStmt, ok := stmt.(*sqlparser.Delete)
+	if !ok {
+		return "", fmt.Errorf("not a DELETE statement")
+	}
+
+	if deleteStmt.Where == nil {
+		return "", fmt.Errorf("no WHERE clause in DELETE statement")
+	}
+
+	return "WHERE " + sqlparser.String(deleteStmt.Where.Expr), nil
 }
