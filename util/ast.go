@@ -146,21 +146,24 @@ func Table_filter(sql_s string, index int, columns []string) string {
 	return table_sql
 }
 
-func Only_one_table(origin sqlparser.Expr, columns []string) sqlparser.Expr {
-
+func Only_one_table(origin sqlparser.Expr, columns []string) (sqlparser.Expr, []sqlparser.Expr) {
+	var predicates []sqlparser.Expr
+	var tmp []sqlparser.Expr
 	switch expr := origin.(type) {
 	case *sqlparser.AndExpr:
 		// origin.(*sqlparser.AndExpr).Left = Only_table(expr.Left, columns)
 		// origin.(*sqlparser.AndExpr).Right = Only_table(expr.Right, columns)
-		expr.Left = Only_one_table(expr.Left, columns)
-		expr.Right = Only_one_table(expr.Right, columns)
+		expr.Left, tmp = Only_one_table(expr.Left, columns)
+		predicates = append(predicates, tmp...)
+		expr.Right, tmp = Only_one_table(expr.Right, columns)
+		predicates = append(predicates, tmp...)
 		if expr.Left == nil {
-			return expr.Right
+			return expr.Right, predicates
 		}
 		if expr.Right == nil {
-			return expr.Left
+			return expr.Left, predicates
 		}
-		return expr
+		return expr, predicates
 	case *sqlparser.ComparisonExpr:
 		cnt := 0
 		if Contains(columns, sqlparser.String(expr.Left)) {
@@ -170,25 +173,28 @@ func Only_one_table(origin sqlparser.Expr, columns []string) sqlparser.Expr {
 			cnt++
 		}
 		if cnt >= 2 {
-			return nil
+			predicates = append(predicates, expr)
+			return nil, predicates
 		} else {
-			return expr
+			return expr, predicates
 		}
 	}
-	return nil
+	return nil, predicates
 }
 
-func Join_fileter(sql_s string, tables map[string]datatype.Table) string {
+func Join_fileter(sql_s string, tables map[string]datatype.Table) (string, []sqlparser.Expr, sqlparser.SelectExprs) {
 	temp_stmt, _ := sqlparser.Parse(sql_s)
 	temp_tree, _ := temp_stmt.(*sqlparser.Select)
 	var columns []string
 	for _, x := range tables {
 		columns = append(columns, x.Columns...)
 	}
-	temp_tree.Where.Expr = Only_one_table(temp_tree.Where.Expr, columns)
+	var predicates []sqlparser.Expr
+	temp_tree.Where.Expr, predicates = Only_one_table(temp_tree.Where.Expr, columns)
+	origin_SelectExprs := temp_tree.SelectExprs
 	temp_tree.SelectExprs = All_expr()
 	no_join_sql := sqlparser.String(temp_tree)
-	return no_join_sql
+	return no_join_sql, predicates, origin_SelectExprs
 }
 
 var all_expr sqlparser.SelectExprs = nil

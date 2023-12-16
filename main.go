@@ -41,9 +41,10 @@ func main() {
 		// SQL_s := "select * from book where  copies>3000 and publisher_id=101085"
 		//3.连接测试
 		// SQL_s := "select * from book,publisher where book.publisher_id = publisher.id and publisher.name= 'Twomorrows Publishing' and book.copies>6000"
-		//dbm.Do(SQL_s)
+		SQL_s := "select orders.book_id,customer.id,orders.customer_id from customer,orders where orders.customer_id = customer.id and customer.id=310119 and orders.customer_id=310119"
+		// dbm.Do(SQL_s)
 
-		SQL_s := "delete from book where title='Maria\\'s Diary (Plus S.)' and copies = 5991;"
+		// SQL_s := "delete from book where title='Maria\\'s Diary (Plus S.)' and copies = 5991;"
 
 		dbm.Do(SQL_s)
 

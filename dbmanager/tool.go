@@ -26,19 +26,77 @@ func initDB(saddr datatype.SqlAddress) (*sql.DB, error) {
 	return DB, nil
 }
 
-func PrintAll(items interface{}) {
-	switch its := items.(type) {
-	case []datatype.Customer:
-		for _, x := range its {
-			fmt.Println(x)
+func PrintAll(tableName string, info map[string]interface{}) {
+	fmt.Printf("表名：%s\n", tableName)
+	fmt.Printf("行数：%d\n", info["rowCount"].(int))
+	fmt.Printf("列数：%d\n", info["colCount"].(int))
+	fmt.Printf("站点：%v\n", info["siteNames"].([]string))
+	fmt.Println("查询结果:")
+	fmt.Println(info["items"])
+	fmt.Println("---------------")
+}
+
+func Merge(J_table map[string]interface{}, ori map[string]interface{}, table_name string) map[string]interface{} {
+	if J_table == nil {
+		items := []map[string]interface{}{}
+		for _, ori_item := range ori["items"].([]map[string]interface{}) {
+			temp := make(map[string]interface{})
+			for k, v := range ori_item {
+				temp[table_name+"."+k] = v
+			}
+			items = append(items, temp)
 		}
-	case []datatype.Orders:
-		for _, x := range its {
-			fmt.Println(x)
+		final := map[string]interface{}{
+			"items":     items,
+			"rowCount":  ori["rowCount"],
+			"colCount":  ori["colCount"],
+			"siteNames": ori["siteNames"],
 		}
-	case []datatype.Publishers:
-		for _, x := range its {
-			fmt.Println(x)
+		return final
+	}
+
+	rowCount := J_table["rowCount"].(int) * ori["rowCount"].(int)
+	colCount := J_table["colCount"].(int) * ori["colCount"].(int)
+	unique_sites := make(map[string]bool)
+	for _, name := range J_table["siteNames"].([]string) {
+		unique_sites[name] = true
+	}
+	for _, name := range ori["siteNames"].([]string) {
+		unique_sites[name] = true
+	}
+	siteNames := []string{}
+
+	for k, _ := range unique_sites {
+		siteNames = append(siteNames, k)
+	}
+	items := []map[string]interface{}{}
+	for _, j_item := range J_table["items"].([]map[string]interface{}) {
+		for _, ori_item := range ori["items"].([]map[string]interface{}) {
+			temp := j_item
+			for k, v := range ori_item {
+				temp[table_name+"."+k] = v
+			}
+			items = append(items, temp)
 		}
 	}
+	final := map[string]interface{}{
+		"items":     items,
+		"rowCount":  rowCount,
+		"colCount":  colCount,
+		"siteNames": siteNames,
+	}
+	return final
+}
+
+func Compare(a interface{}, b interface{}) bool {
+
+	switch a.(type) {
+	case string:
+		// fmt.Println(a.(string), b.(string))
+		return a.(string) == b.(string)
+	case int:
+
+		return a.(int) == b.(int)
+	}
+	return true
 }

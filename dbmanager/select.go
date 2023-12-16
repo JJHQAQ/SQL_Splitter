@@ -15,7 +15,7 @@ func (dbmp *DBM) Select(sql_s string) {
 		return
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string](map[string]interface{}))
 
 	// function Parse parses the sql statement into a tree
 	stmt, err := sqlparser.Parse(sql_s)
@@ -30,15 +30,25 @@ func (dbmp *DBM) Select(sql_s string) {
 	}
 
 	var sql_no_join string
-
+	var predicates []sqlparser.Expr
+	var origin_SelectExprs sqlparser.SelectExprs
+	NeedJoin := false
+	if len(tree.From) > 1 {
+		NeedJoin = true
+	}
 	// Check if the SQL statement contains a WHERE clause
-	if tree.Where != nil && tree.Where.Expr != nil {
-		sql_no_join = util.Join_fileter(sql_s, dbmp.tables)
+	if tree.Where != nil && tree.Where.Expr != nil && NeedJoin {
+
+		sql_no_join, predicates, origin_SelectExprs = util.Join_fileter(sql_s, dbmp.tables)
 	} else {
 		sql_no_join = sql_s
 	}
 
 	fmt.Println(sql_no_join)
+	if NeedJoin {
+		fmt.Println(sqlparser.String(predicates[0]))
+		fmt.Println(sqlparser.String(origin_SelectExprs))
+	}
 	for i, table := range tree.From {
 		table_name := sqlparser.GetTableName(table.(*sqlparser.AliasedTableExpr).Expr).String() //获取表名
 
@@ -60,14 +70,16 @@ func (dbmp *DBM) Select(sql_s string) {
 				"colCount":  colCount,
 				"siteNames": siteNames,
 			}
-			for tableName, info := range result {
-				fmt.Printf("表名：%s\n", tableName)
-				fmt.Printf("行数：%d\n", info.(map[string]interface{})["rowCount"].(int))
-				fmt.Printf("列数：%d\n", info.(map[string]interface{})["colCount"].(int))
-				fmt.Printf("站点：%v\n", info.(map[string]interface{})["siteNames"].([]string))
-				fmt.Println("查询结果:")
-				fmt.Println(info.(map[string]interface{})["items"])
-				fmt.Println("---------------")
+			if !NeedJoin {
+				for tableName, info := range result {
+					fmt.Printf("表名：%s\n", tableName)
+					fmt.Printf("行数：%d\n", info["rowCount"].(int))
+					fmt.Printf("列数：%d\n", info["colCount"].(int))
+					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
+					fmt.Println("查询结果:")
+					fmt.Println(info["items"])
+					fmt.Println("---------------")
+				}
 			}
 			// PrintAll(items)
 		}
@@ -79,18 +91,70 @@ func (dbmp *DBM) Select(sql_s string) {
 				"colCount":  colCount,
 				"siteNames": siteNames,
 			}
-			for tableName, info := range result {
-				fmt.Printf("表名：%s\n", tableName)
-				fmt.Printf("行数：%d\n", info.(map[string]interface{})["rowCount"].(int))
-				fmt.Printf("列数：%d\n", info.(map[string]interface{})["colCount"].(int))
-				fmt.Printf("站点：%v\n", info.(map[string]interface{})["siteNames"].([]string))
-				// fmt.Println("查询结果:")
-				// fmt.Println(info.(map[string]interface{})["items"])
-				fmt.Println("---------------")
+			if !NeedJoin {
+				for tableName, info := range result {
+					fmt.Printf("表名：%s\n", tableName)
+					fmt.Printf("行数：%d\n", info["rowCount"].(int))
+					fmt.Printf("列数：%d\n", info["colCount"].(int))
+					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
+					// fmt.Println("查询结果:")
+					// fmt.Println(info.(map[string]interface{})["items"])
+					fmt.Println("---------------")
+				}
 			}
 			// PrintAll(items)
 		}
+	}
 
+	if NeedJoin {
+		var JoinResult map[string]interface{}
+		JoinResult = nil
+		colNum := 0
+		for tableName, info := range result {
+			// fmt.Println(tableName, ": ", len(info["items"].([]map[string]interface{})))
+			// fmt.Println(info["items"].([]map[string]interface{}))
+			JoinResult = Merge(JoinResult, info, tableName)
+			colNum = colNum + info["colCount"].(int)
+		}
+		// fmt.Println(len(JoinResult["items"].([]map[string]interface{})))
+		items := []map[string]interface{}{}
+		for _, item := range JoinResult["items"].([]map[string]interface{}) {
+			flag := true
+			for _, predicate := range predicates {
+				ColLeft := sqlparser.String(predicate.(*sqlparser.ComparisonExpr).Left)
+				ColRight := sqlparser.String(predicate.(*sqlparser.ComparisonExpr).Right)
+				if !Compare(item[ColLeft], item[ColRight]) {
+					flag = false
+				}
+			}
+			if flag {
+				items = append(items, item)
+			}
+		}
+		// fmt.Println(len(items))
+
+		items_final := []map[string]interface{}{}
+		colList := []string{}
+		if sqlparser.String(origin_SelectExprs) != "*" {
+			colNum = len(origin_SelectExprs)
+			for _, it := range origin_SelectExprs {
+				colList = append(colList, sqlparser.String(it))
+			}
+			for _, item := range items {
+				temp := make(map[string]interface{})
+				for _, col := range colList {
+					temp[col] = item[col]
+				}
+				items_final = append(items_final, temp)
+			}
+		} else {
+			items_final = items
+		}
+		JoinResult["items"] = items_final
+		JoinResult["rowCount"] = len(JoinResult["items"].([]map[string]interface{}))
+		JoinResult["colCount"] = colNum
+		// fmt.Println(JoinResult["items"].([]map[string]interface{}))
+		PrintAll("final result", JoinResult)
 	}
 
 }
