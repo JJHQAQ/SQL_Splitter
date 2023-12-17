@@ -1,10 +1,8 @@
 package dbmanager
 
 import (
-	"SQL_Splitter/datatype"
 	"SQL_Splitter/util"
 	"fmt"
-	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/xwb1989/sqlparser"
@@ -97,8 +95,8 @@ func (dbmp *DBM) Select(sql_s string) {
 					fmt.Printf("行数：%d\n", info["rowCount"].(int))
 					fmt.Printf("列数：%d\n", info["colCount"].(int))
 					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-					// fmt.Println("查询结果:")
-					// fmt.Println(info.(map[string]interface{})["items"])
+					fmt.Println("查询结果:")
+					fmt.Println(info["items"])
 					fmt.Println("---------------")
 				}
 			}
@@ -168,8 +166,6 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) ([]map
 		rowCount := 0
 		colCount := 0
 		var siteNames []string
-		// 用于记录已经存在的行
-		uniqueRows := make(map[string]struct{})
 
 		for _, site := range dbmp.tables[TableName].Sites {
 			rows, e := dbmp.Databases[site].Query(sql_s)
@@ -207,16 +203,8 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) ([]map
 						result[col] = val
 					}
 				}
-
-				// 将行表示为字符串，用于检查是否重复
-				rowKey := fmt.Sprintf("%v", result)
-
-				// 如果行没有重复，则加入结果集
-				if _, exists := uniqueRows[rowKey]; !exists {
-					rowCount++
-					results = append(results, result)
-					uniqueRows[rowKey] = struct{}{}
-				}
+				rowCount++
+				results = append(results, result)
 			}
 			rows.Close()
 			// 只有在站点有结果时才加入站点列表
@@ -230,9 +218,9 @@ func (dbmp *DBM) horizontal_fragmentation(sql_s string, TableName string) ([]map
 	return nil, 0, 0, nil
 }
 
-func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]datatype.Book, int, int, []string) {
+func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]map[string]interface{}, int, int, []string) {
 	if TableName == "book" {
-		var books []datatype.Book
+		var books, books1, books2 []map[string]interface{}
 		var rowCount, colCount int
 		var resultSites []string
 		column_book1 := []string{"id", "title"}
@@ -246,7 +234,6 @@ func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]datat
 			fmt.Println("Error:", err)
 			return nil, 0, 0, nil
 		}
-
 		if select_fields[0] == "*" {
 			select_book1 = true
 			select_book2 = true
@@ -265,15 +252,12 @@ func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]datat
 				}
 			}
 		}
-
 		select_from_book1 += " from book"
 		select_from_book2 += " from book"
-
 		predicates := util.Predicates(sql_s)
 		book1_has_predicate := false
 		book2_has_predicate := false
 		for _, predicate := range predicates {
-			// Predicate triplet
 			column, operator, value := util.Extract_predicate_info(predicate)
 			if util.Contains(column_book1, column) {
 				if !book1_has_predicate {
@@ -290,79 +274,133 @@ func (dbmp *DBM) vertical_fragmentation(sql_s string, TableName string) ([]datat
 					book2_has_predicate = true
 					select_from_book2 += (" where " + column + " " + operator + " " + value)
 				} else {
-					select_from_book2 += (", " + column + " " + operator + " " + value)
+					select_from_book2 += (" and " + column + " " + operator + " " + value)
 				}
 			}
 		}
 		select_from_book1 += ";"
 		select_from_book2 += ";"
-		// var site1, site2 string
-		// if select_book1 {
-		// 	rows_book1, err1 := dbmp.Databases[site1].Query(select_from_book1)
-		// }
-		// if select_book2 {
-		// 	rows_book2, err2 := dbmp.Databases[site2].Query(select_from_book2)
-		// }
-		// // fmt.Println(select_from_book1)
-		// // fmt.Println(select_from_book2)
-		// // rows_book1和rows_book2的第一列都必定是id，根据id合并，
-		// // 最后判断select_fields是不是”*“，
-		// //    如果是就不需要处理了
-		// //    如果不是，那么就要把第一列的id删除
-		// return books
+		// fmt.Println(select_from_book1)
+		// fmt.Println(select_from_book2)
 
 		// Query databases and merge results
 		if select_book1 {
 			rowsBook1, err1 := dbmp.Databases["site1"].Query(select_from_book1)
 			if err1 != nil {
-				fmt.Println("Error querying site1:", err1)
+				fmt.Println("查询 site1 时出错:", err1)
 				return nil, 0, 0, nil
 			}
 			defer rowsBook1.Close()
-
+			columns, _ := rowsBook1.Columns()
 			// Process rowsBook1 and append to books
 			resultSites = append(resultSites, "site1")
 			for rowsBook1.Next() {
-				var book datatype.Book
-				err := rowsBook1.Scan(&book.Id, &book.Title /* other fields */)
-				if err != nil {
-					fmt.Println("Error scanning row from site1:", err)
+				result := make(map[string]interface{})
+				// 创建一个切片来保存列指针
+				columnPointers := make([]interface{}, len(columns))
+				for i := range columns {
+					columnPointers[i] = new(interface{})
+				}
+				// 将行扫描到列指针中
+				if err := rowsBook1.Scan(columnPointers...); err != nil {
+					fmt.Println("扫描行时发生错误:", err)
 					continue
 				}
-				books = append(books, book)
+				// 遍历列指针，将值填充到 map 中
+				for i, col := range columns {
+					switch val := (*columnPointers[i].(*interface{})).(type) {
+					case []byte:
+						result[col] = string(val)
+					default:
+						result[col] = val
+					}
+				}
+				books1 = append(books1, result)
 			}
 		}
-
 		if select_book2 {
 			rowsBook2, err2 := dbmp.Databases["site2"].Query(select_from_book2)
 			if err2 != nil {
-				fmt.Println("Error querying site2:", err2)
+				fmt.Println("查询 site2 时出错:", err2)
 				return nil, 0, 0, nil
 			}
-			// 当前函数执行结束时关闭 rowsBook2
 			defer rowsBook2.Close()
-
-			// Process rowsBook2 and append to books
+			columns, _ := rowsBook2.Columns()
+			// 处理 rowsBook2 并附加到 books
 			resultSites = append(resultSites, "site2")
 			for rowsBook2.Next() {
-				var book datatype.Book
-				err := rowsBook2.Scan(&book.Id, &book.Authors, &book.Publisher_id, &book.Copies /* other fields */)
-				if err != nil {
-					fmt.Println("Error scanning row from site2:", err)
+				var result = make(map[string]interface{})
+				// 创建一个切片来保存列指针
+				columnPointers := make([]interface{}, len(columns))
+				for i := range columns {
+					columnPointers[i] = new(interface{})
+				}
+				// 将行扫描到列指针中
+				if err := rowsBook2.Scan(columnPointers...); err != nil {
+					fmt.Println("扫描行时发生错误:", err)
 					continue
 				}
-				books = append(books, book)
+				// 遍历列指针，将值填充到 map 中
+				for i, col := range columns {
+					switch val := (*columnPointers[i].(*interface{})).(type) {
+					case []byte:
+						result[col] = string(val)
+					default:
+						result[col] = val
+					}
+				}
+				books2 = append(books2, result)
 			}
 		}
-		// Get row count and column count
-		rowCount = len(books)
-		// 使用反射获取列数
-		if rowCount > 0 {
-			// 假设所有书籍的结构相同，使用第一本书来确定列数
-			colCount = reflect.TypeOf(books[0]).NumField()
+		books = mergeMapsByKey(books1, books2, "id")
+		// 检查是否应该移除 "id" 列
+		removeIDColumn := !(util.Contains(select_fields, "id") || util.Contains(select_fields, "*"))
+		// 如果应该移除 "id" 列，则从每一行中移除它
+		if removeIDColumn {
+			for i := range books {
+				delete(books[i], "id")
+			}
 		}
-
+		// 获取行数和列数
+		rowCount = len(books)
+		if rowCount > 0 {
+			colCount = len(books[0])
+		}
 		return books, rowCount, colCount, resultSites
 	}
 	return nil, 0, 0, nil
+}
+
+// 定义一个函数，根据共同的键合并两个 map 切片
+func mergeMapsByKey(slice1, slice2 []map[string]interface{}, key string) []map[string]interface{} {
+	merged := make([]map[string]interface{}, 0)
+
+	// 如果其中一个切片为空，则直接返回另一个切片
+	if len(slice1) == 0 {
+		return slice2
+	} else if len(slice2) == 0 {
+		return slice1
+	}
+
+	// 创建一个 map 以存储基于键的记录
+	records := make(map[interface{}]map[string]interface{})
+
+	// 从第一个切片中填充记录
+	for _, item := range slice1 {
+		records[item[key]] = item
+	}
+
+	// 从第二个切片中更新或添加记录，并仅保留那些在第一个切片中存在的记录
+	for _, item := range slice2 {
+		if existing, ok := records[item[key]]; ok {
+			// 如果键已经存在，则合并数据
+			for k, v := range item {
+				existing[k] = v
+			}
+			// 将该记录添加到结果中
+			merged = append(merged, existing)
+		}
+	}
+
+	return merged
 }
