@@ -9,6 +9,7 @@ import (
 
 // Only the and predicate is supported
 func (dbmp *DBM) Delete(sql_s string) State {
+	// fmt.Println("Do Delete....")
 	table_name, err := util.Get_delete_table(sql_s)
 	if err != nil {
 		return FAILED
@@ -18,9 +19,9 @@ func (dbmp *DBM) Delete(sql_s string) State {
 	do_on_site2 := false
 	do_on_site3 := false
 	do_on_site4 := false
-	fmt.Println(table_name)
+	// fmt.Println(table_name)
 	if table_name == "book" {
-		fmt.Println("do delete on book..")
+		// fmt.Println("do delete on book..")
 		set := NewIntSet()
 		set_end := NewIntSet()
 		select_from_book1 := "SELECT id FROM book "
@@ -70,7 +71,6 @@ func (dbmp *DBM) Delete(sql_s string) State {
 					return FAILED
 				}
 				set.Add(id)
-				fmt.Println(id)
 			}
 		}
 		if select_book2 {
@@ -86,14 +86,13 @@ func (dbmp *DBM) Delete(sql_s string) State {
 					fmt.Println(err)
 					return FAILED
 				}
-				if set.Contains(id) {
+				if select_book1 && set.Contains(id) {
+					set_end.Add(id)
+				} else {
 					set_end.Add(id)
 				}
-				fmt.Println(id)
+				// fmt.Println(id)
 			}
-		} else {
-			fmt.Println("cndknjkd ")
-			fmt.Println(select_from_book2)
 		}
 		sql_new := "DELETE FROM book WHERE id in ("
 		first := true
@@ -109,7 +108,7 @@ func (dbmp *DBM) Delete(sql_s string) State {
 
 		if len(set_end) > 0 {
 			sql_new += ");"
-			fmt.Println(sql_new)
+			// fmt.Println(sql_new)
 			_, err3 := dbmp.Databases["site1"].Exec(sql_new)
 			if err3 != nil {
 				fmt.Println("Error executing DELETE statement: ", err3)
@@ -234,8 +233,23 @@ func (dbmp *DBM) Delete(sql_s string) State {
 			do_on_site4 = true
 		}
 	} else if table_name == "publisher" {
+		// fmt.Println("The Table Name is Publisher....")
 		submeter_key1 := false
 		submeter_key2 := false
+		select_from_publisher := "SELECT id FROM publisher"
+		has_predicate := false
+		for _, predicate := range predicates {
+			// Predicate triplet
+			column, operator, value := util.Extract_predicate_info(predicate)
+			if !has_predicate {
+				has_predicate = true
+				select_from_publisher += (" where " + column + " " + operator + " " + value)
+			} else {
+				select_from_publisher += (", " + column + " " + operator + " " + value)
+			}
+		}
+		select_from_publisher += ";"
+		// fmt.Println(select_from_publisher)
 		for _, predicate := range predicates {
 			column, operator, value := util.Extract_predicate_info(predicate)
 			if column == "id" {
@@ -288,6 +302,139 @@ func (dbmp *DBM) Delete(sql_s string) State {
 			do_on_site2 = true
 			do_on_site3 = true
 			do_on_site4 = true
+		}
+		set := NewIntSet()
+		if do_on_site1 {
+			rows, err := dbmp.Databases["site1"].Query(select_from_publisher)
+			if err != nil {
+				fmt.Println(err)
+				return FAILED
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var id int
+				if err := rows.Scan(&id); err != nil {
+					fmt.Println(err)
+					return FAILED
+				}
+				set.Add(id)
+			}
+		}
+		if do_on_site2 {
+			rows, err := dbmp.Databases["site2"].Query(select_from_publisher)
+			if err != nil {
+				fmt.Println(err)
+				return FAILED
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var id int
+				if err := rows.Scan(&id); err != nil {
+					fmt.Println(err)
+					return FAILED
+				}
+				set.Add(id)
+			}
+		}
+		if do_on_site3 {
+			rows, err := dbmp.Databases["site3"].Query(select_from_publisher)
+			if err != nil {
+				fmt.Println(err)
+				return FAILED
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var id int
+				if err := rows.Scan(&id); err != nil {
+					fmt.Println(err)
+					return FAILED
+				}
+				set.Add(id)
+			}
+		}
+		if do_on_site4 {
+			rows, err := dbmp.Databases["site4"].Query(select_from_publisher)
+			if err != nil {
+				fmt.Println(err)
+				return FAILED
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var id int
+				if err := rows.Scan(&id); err != nil {
+					fmt.Println(err)
+					return FAILED
+				}
+				set.Add(id)
+			}
+		}
+		// fmt.Println("delete publisher id nums: ", len(set))
+		//
+		set_book_id := NewIntSet()
+		delete_all := false
+		if len(set) != 0 {
+			var input string
+			select_from_book := "SELECT id FROM book where publisher_id in("
+			for num := range set {
+				num_str := strconv.Itoa(num)
+				select_from_book += num_str
+			}
+			select_from_book += ");"
+			rows1, err1 := dbmp.Databases["site2"].Query(select_from_book)
+			if err1 != nil {
+				fmt.Println(err1)
+				return FAILED
+			}
+			defer rows1.Close()
+			for rows1.Next() {
+				var id int
+				if err := rows1.Scan(&id); err != nil {
+					fmt.Println(err)
+					return FAILED
+				}
+				set_book_id.Add(id)
+			}
+			// fmt.Println("delete book id nums: ", len(set_book_id))
+			if len(set_book_id) != 0 {
+				fmt.Println("The id of table publisher is the foreign key of table book. Do you want to delete it cascaded?(Y/N)")
+				_, err := fmt.Scanln(&input)
+				if err != nil {
+					fmt.Println("Wrong:", err)
+					return FAILED
+				}
+				if input == "Y" {
+					delete_all = true
+				} else {
+					// do nothing
+					return SUCCESS
+				}
+				if delete_all {
+					sql_new := "DELETE FROM book WHERE id in ("
+					first := true
+					for num := range set_book_id {
+						num_str := strconv.Itoa(num)
+						if first {
+							first = false
+							sql_new += num_str
+						} else {
+							sql_new += ("," + num_str)
+						}
+					}
+					sql_new += ");"
+					fmt.Println(sql_new)
+					_, err3 := dbmp.Databases["site1"].Exec(sql_new)
+					if err3 != nil {
+						fmt.Println("Error executing DELETE statement: ", err3)
+					}
+					fmt.Println("Site involved: site1.")
+					_, err4 := dbmp.Databases["site2"].Exec(sql_new)
+					if err4 != nil {
+						fmt.Println("Error executing DELETE statement: ", err4)
+					}
+					fmt.Println("Site involved: site2.")
+				}
+			}
+
 		}
 	} else {
 		fmt.Println("The deleted data table does not exist!")
