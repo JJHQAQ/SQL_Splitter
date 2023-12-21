@@ -3,6 +3,7 @@ package dbmanager
 import (
 	"SQL_Splitter/datatype"
 	"SQL_Splitter/util"
+	"bufio"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -114,6 +115,19 @@ func (dbmp *DBM) Do(sql_s string) {
 		dbmp.Delete(sql_s)
 	}
 
+}
+
+func (dbmp *DBM) DoMany(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		dbmp.Do(scanner.Text())
+		// fmt.Println(scanner.Text())
+	}
 }
 
 func New_DBM() *DBM {

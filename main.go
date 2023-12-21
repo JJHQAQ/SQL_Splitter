@@ -48,6 +48,7 @@ func main() {
 		// SQL_s := "delete from book where title='Maria\\'s Diary (Plus S.)' and copies = 5991;"
 
 		dbm.Do(SQL_s)
+		// dbm.DoMany("./demo/test.sql")
 
 		fmt.Println("Success:!!!")
 		break
