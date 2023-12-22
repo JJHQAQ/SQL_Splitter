@@ -3,6 +3,7 @@ package dbmanager
 import (
 	"SQL_Splitter/util"
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/xwb1989/sqlparser"
@@ -70,12 +71,19 @@ func (dbmp *DBM) Select(sql_s string) {
 			}
 			if !NeedJoin {
 				for tableName, info := range result {
+					fmt.Println("查询结果:")
+					// 获取列名
+					columns := getColumns(info["items"].([]map[string]interface{}))
+					// 打印列名
+					fmt.Println(strings.Join(columns, "\t"))
+					// 打印数据
+					for _, item := range info["items"].([]map[string]interface{}) {
+						printRow(item, columns)
+					}
 					fmt.Printf("表名：%s\n", tableName)
 					fmt.Printf("行数：%d\n", info["rowCount"].(int))
 					fmt.Printf("列数：%d\n", info["colCount"].(int))
 					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-					fmt.Println("查询结果:")
-					fmt.Println(info["items"])
 					fmt.Println("---------------")
 				}
 			}
@@ -91,12 +99,19 @@ func (dbmp *DBM) Select(sql_s string) {
 			}
 			if !NeedJoin {
 				for tableName, info := range result {
+					fmt.Println("查询结果:")
+					// 获取列名
+					columns := getColumns(info["items"].([]map[string]interface{}))
+					// 打印列名
+					fmt.Println(strings.Join(columns, "\t"))
+					// 打印数据
+					for _, item := range info["items"].([]map[string]interface{}) {
+						printRow(item, columns)
+					}
 					fmt.Printf("表名：%s\n", tableName)
 					fmt.Printf("行数：%d\n", info["rowCount"].(int))
 					fmt.Printf("列数：%d\n", info["colCount"].(int))
 					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-					fmt.Println("查询结果:")
-					fmt.Println(info["items"])
 					fmt.Println("---------------")
 				}
 			}
@@ -403,4 +418,22 @@ func mergeMapsByKey(slice1, slice2 []map[string]interface{}, key string) []map[s
 	}
 
 	return merged
+}
+
+// getColumns 获取列名
+func getColumns(items []map[string]interface{}) []string {
+	var columns []string
+	for key := range items[0] {
+		columns = append(columns, key)
+	}
+	return columns
+}
+
+// printRow 打印一行数据
+func printRow(item map[string]interface{}, columns []string) {
+	var values []string
+	for _, column := range columns {
+		values = append(values, fmt.Sprintf("%v", item[column]))
+	}
+	fmt.Println(strings.Join(values, "\t"))
 }

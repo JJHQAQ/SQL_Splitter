@@ -27,12 +27,19 @@ func initDB(saddr datatype.SqlAddress) (*sql.DB, error) {
 }
 
 func PrintAll(tableName string, info map[string]interface{}) {
+	fmt.Println("查询结果:")
+	// 获取列名
+	columns := getColumns(info["items"].([]map[string]interface{}))
+	// 打印列名
+	fmt.Println(strings.Join(columns, "\t"))
+	// 打印数据
+	for _, item := range info["items"].([]map[string]interface{}) {
+		printRow(item, columns)
+	}
 	fmt.Printf("表名：%s\n", tableName)
 	fmt.Printf("行数：%d\n", info["rowCount"].(int))
 	fmt.Printf("列数：%d\n", info["colCount"].(int))
 	fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-	fmt.Println("查询结果:")
-	fmt.Println(info["items"])
 	fmt.Println("---------------")
 }
 

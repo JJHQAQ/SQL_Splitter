@@ -24,7 +24,7 @@ func main() {
 		//Input the SQL
 		//1.水平查询
 		//1.1基本测试
-		// SQL_s := "select * from customer" //行数：15000 列数：3 站点：[site1 site2 site3]
+		SQL_s := "select * from customer" //行数：15000 列数：3 站点：[site1 site2 site3]
 		// SQL_s := "select * from orders" //行数：100000 列数：3 站点：[site1 site2 site3 site4]
 		// SQL_s := "select * from publisher" //行数：5000	列数：3 站点：[site1 site2 site3 site4]
 		//1.2条件测试
@@ -46,7 +46,7 @@ func main() {
 		// dbm.Do(SQL_s)
 		//4.删除测试
 		// SQL_s := "delete from book where title='Maria\\'s Diary (Plus S.)' and copies = 5991;"
-		SQL_s := "delete from publisher where id=104378"
+		// SQL_s := "delete from publisher where id=104378"
 
 		dbm.Do(SQL_s)
 		// dbm.DoMany("./demo/test.sql")
