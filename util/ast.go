@@ -106,7 +106,9 @@ func Extract_predicate_info(expr sqlparser.Expr) (string, string, string) {
 }
 
 func Only_table(origin sqlparser.Expr, columns []string) sqlparser.Expr {
-
+	if origin == nil {
+		return nil
+	}
 	switch expr := origin.(type) {
 	case *sqlparser.AndExpr:
 		// origin.(*sqlparser.AndExpr).Left = Only_table(expr.Left, columns)
@@ -141,7 +143,9 @@ func Table_filter(sql_s string, index int, columns []string) string {
 	temp_stmt, _ := sqlparser.Parse(sql_s)
 	temp_tree, _ := temp_stmt.(*sqlparser.Select)
 	temp_tree.From = temp_tree.From[index : index+1]
-	temp_tree.Where.Expr = Only_table(temp_tree.Where.Expr, columns)
+	if temp_tree.Where != nil {
+		temp_tree.Where.Expr = Only_table(temp_tree.Where.Expr, columns)
+	}
 	table_sql := sqlparser.String(temp_tree)
 	return table_sql
 }

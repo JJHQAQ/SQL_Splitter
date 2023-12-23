@@ -45,8 +45,8 @@ func (dbmp *DBM) Select(sql_s string) {
 
 	// fmt.Println(sql_no_join)
 	// if NeedJoin {
-	// fmt.Println(sqlparser.String(predicates[0]))
-	// fmt.Println(sqlparser.String(origin_SelectExprs))
+	// 	fmt.Println(sqlparser.String(predicates[0]))
+	// 	fmt.Println(sqlparser.String(origin_SelectExprs))
 	// }
 	for i, table := range tree.From {
 		table_name := sqlparser.GetTableName(table.(*sqlparser.AliasedTableExpr).Expr).String() //获取表名
@@ -57,9 +57,6 @@ func (dbmp *DBM) Select(sql_s string) {
 		} else {
 			table_sql = sql_s
 		}
-
-		// fmt.Println(dbmp.tables[table_name].Columns)
-		// fmt.Println(table_sql)
 
 		if dbmp.tables[table_name].Mode == "h" { //水平分片
 			items, rowCount, colCount, siteNames := dbmp.horizontal_fragmentation(table_sql, table_name)
@@ -93,6 +90,7 @@ func (dbmp *DBM) Select(sql_s string) {
 		colNum := 0
 		for tableName, info := range result {
 			JoinResult = Merge(JoinResult, info, tableName)
+			// fmt.Println(tableName, JoinResult["rowCount"])
 			colNum = colNum + info["colCount"].(int)
 		}
 
@@ -110,7 +108,6 @@ func (dbmp *DBM) Select(sql_s string) {
 				items = append(items, item)
 			}
 		}
-		// fmt.Println(len(items))
 
 		items_final := []map[string]interface{}{}
 		colList := []string{}

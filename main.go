@@ -22,6 +22,8 @@ func main() {
 	dbm := dbmanager.New_DBM()
 
 	Init()
+	// SQL_s := "select customer.name from customer,orders where customer.id=orders.customer_id"
+	// dbm.Do(SQL_s)
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -67,6 +69,7 @@ func main() {
 			fmt.Println("请输入相应的指令。")
 		}
 	}
+
 	// for {
 	// 	//Input the SQL
 	// 	//1.水平查询
@@ -91,6 +94,7 @@ func main() {
 	// 	// SQL_s := "select * from book,publisher where book.publisher_id = publisher.id and publisher.name= 'Twomorrows Publishing' and book.copies>6000"
 	//  // SQL_s := "select book.title,book.authors from book,publisher where book.publisher_id = publisher.id and publisher.name= 'Twomorrows Publishing' and book.copies>6000"
 	// 	// SQL_s := "select orders.book_id,customer.id,orders.customer_id from customer,orders where orders.customer_id = customer.id and customer.id=310119 and orders.customer_id=310119"
+	// 	// SQL_s := "select customer.name from customer,orders where customer.id=orders.customer_id"
 	// 	// dbm.Do(SQL_s)
 	// 	//4.删除测试
 	// 	// SQL_s := "delete from book where title='Maria\\'s Diary (Plus S.)' and copies = 5991;"
