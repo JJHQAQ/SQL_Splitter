@@ -38,6 +38,44 @@ func (dbmp *DBM) Insert(sql_s string) State {
 		title := values[1]
 		authors := values[2]
 		publishers_id := values[3]
+		select_from_publisher := "select * from publisher where id = "
+		select_from_publisher += publishers_id
+		id_num1, err := strconv.Atoi(publishers_id)
+		if err != nil {
+			fmt.Println("The type of value does not match:", err)
+			return FAILED
+		}
+		if id_num1 <= 102500 {
+			rows1, err1 := dbmp.Databases["site1"].Query(select_from_publisher)
+			if err1 != nil {
+				fmt.Println(err1)
+				return FAILED
+			}
+			rows2, err2 := dbmp.Databases["site2"].Query(select_from_publisher)
+			if err2 != nil {
+				fmt.Println(err2)
+				return FAILED
+			}
+			if !rows1.Next() && !rows2.Next() {
+				fmt.Println("Violation of referential integrity constraint.")
+				return FAILED
+			}
+		} else {
+			rows3, err3 := dbmp.Databases["site3"].Query(select_from_publisher)
+			if err3 != nil {
+				fmt.Println(err3)
+				return FAILED
+			}
+			rows4, err4 := dbmp.Databases["site4"].Query(select_from_publisher)
+			if err4 != nil {
+				fmt.Println(err4)
+				return FAILED
+			}
+			if !rows3.Next() && !rows4.Next() {
+				fmt.Println("Violation of referential integrity constraint.")
+				return FAILED
+			}
+		}
 		copies := values[4]
 		insert_stmt1 := "INSERT INTO book VALUES("
 		insert_stmt2 := "INSERT INTO book VALUES("
