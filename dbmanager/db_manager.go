@@ -110,9 +110,12 @@ func (dbmp *DBM) Do(sql_s string) {
 		dbmp.Select(sql_s)
 	} else if sqlparser.StmtType(class_code) == "INSERT" {
 		// TODO
-		dbmp.Insert(sql_s)
+		rc := dbmp.Insert(sql_s)
+		fmt.Println(rc)
+
 	} else if sqlparser.StmtType(class_code) == "DELETE" {
-		dbmp.Delete(sql_s)
+		rc := dbmp.Delete(sql_s)
+		fmt.Println(rc)
 	}
 
 }
