@@ -12,7 +12,7 @@
         "UserName" : "root",
         "Password" : "123456",
         "Ip": "127.0.0.1",
-        "Port":"3308",
+        "Port":"3306",
         "DbName":"orderDB"
     },
     {
@@ -20,7 +20,7 @@
         "UserName" : "root",
         "Password" : "123456",
         "Ip": "127.0.0.1",
-        "Port":"3309",
+        "Port":"3308",
         "DbName":"orderDB"
     },
     {
@@ -28,7 +28,7 @@
         "UserName" : "root",
         "Password" : "123456",
         "Ip": "127.0.0.1",
-        "Port":"3310",
+        "Port":"3309",
         "DbName":"orderDB"
     }
 ]

@@ -43,11 +43,11 @@ func (dbmp *DBM) Select(sql_s string) {
 		sql_no_join = sql_s
 	}
 
-	fmt.Println(sql_no_join)
-	if NeedJoin {
-		fmt.Println(sqlparser.String(predicates[0]))
-		fmt.Println(sqlparser.String(origin_SelectExprs))
-	}
+	// fmt.Println(sql_no_join)
+	// if NeedJoin {
+	// fmt.Println(sqlparser.String(predicates[0]))
+	// fmt.Println(sqlparser.String(origin_SelectExprs))
+	// }
 	for i, table := range tree.From {
 		table_name := sqlparser.GetTableName(table.(*sqlparser.AliasedTableExpr).Expr).String() //获取表名
 
@@ -70,24 +70,8 @@ func (dbmp *DBM) Select(sql_s string) {
 				"siteNames": siteNames,
 			}
 			if !NeedJoin {
-				for tableName, info := range result {
-					fmt.Println("查询结果:")
-					// 获取列名
-					columns := getColumns(info["items"].([]map[string]interface{}))
-					// 打印列名
-					fmt.Println(strings.Join(columns, "\t"))
-					// 打印数据
-					for _, item := range info["items"].([]map[string]interface{}) {
-						printRow(item, columns)
-					}
-					fmt.Printf("表名：%s\n", tableName)
-					fmt.Printf("行数：%d\n", info["rowCount"].(int))
-					fmt.Printf("列数：%d\n", info["colCount"].(int))
-					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-					fmt.Println("---------------")
-				}
+				PrintAll(table_name, result[table_name])
 			}
-			// PrintAll(items)
 		}
 		if dbmp.tables[table_name].Mode == "v" { //垂直分片
 			items, rowCount, colCount, siteNames := dbmp.vertical_fragmentation(table_sql, table_name)
@@ -98,24 +82,8 @@ func (dbmp *DBM) Select(sql_s string) {
 				"siteNames": siteNames,
 			}
 			if !NeedJoin {
-				for tableName, info := range result {
-					fmt.Println("查询结果:")
-					// 获取列名
-					columns := getColumns(info["items"].([]map[string]interface{}))
-					// 打印列名
-					fmt.Println(strings.Join(columns, "\t"))
-					// 打印数据
-					for _, item := range info["items"].([]map[string]interface{}) {
-						printRow(item, columns)
-					}
-					fmt.Printf("表名：%s\n", tableName)
-					fmt.Printf("行数：%d\n", info["rowCount"].(int))
-					fmt.Printf("列数：%d\n", info["colCount"].(int))
-					fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-					fmt.Println("---------------")
-				}
+				PrintAll(table_name, result[table_name])
 			}
-			// PrintAll(items)
 		}
 	}
 
@@ -124,12 +92,10 @@ func (dbmp *DBM) Select(sql_s string) {
 		JoinResult = nil
 		colNum := 0
 		for tableName, info := range result {
-			// fmt.Println(tableName, ": ", len(info["items"].([]map[string]interface{})))
-			// fmt.Println(info["items"].([]map[string]interface{}))
 			JoinResult = Merge(JoinResult, info, tableName)
 			colNum = colNum + info["colCount"].(int)
 		}
-		// fmt.Println(len(JoinResult["items"].([]map[string]interface{})))
+
 		items := []map[string]interface{}{}
 		for _, item := range JoinResult["items"].([]map[string]interface{}) {
 			flag := true

@@ -89,6 +89,7 @@ func main() {
 	// 	// SQL_s := "select * from book where  copies>3000 and publisher_id=101085" //行数：16 列数：5 站点：[site1 site2]
 	// 	//3.连接测试
 	// 	// SQL_s := "select * from book,publisher where book.publisher_id = publisher.id and publisher.name= 'Twomorrows Publishing' and book.copies>6000"
+	//  // SQL_s := "select book.title,book.authors from book,publisher where book.publisher_id = publisher.id and publisher.name= 'Twomorrows Publishing' and book.copies>6000"
 	// 	// SQL_s := "select orders.book_id,customer.id,orders.customer_id from customer,orders where orders.customer_id = customer.id and customer.id=310119 and orders.customer_id=310119"
 	// 	// dbm.Do(SQL_s)
 	// 	//4.删除测试
