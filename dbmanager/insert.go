@@ -63,7 +63,7 @@ func (dbmp *DBM) Insert(sql_s string) State {
 			util.Handle_err(err)
 			fmt.Println("Site involved: site1.")
 		} else if id_num > 310000 {
-			fmt.Println("id_num > 310000!!!!! site3")
+			// fmt.Println("id_num > 310000!!!!! site3")
 			_, err := dbmp.Databases["site3"].Exec(sql_s)
 			util.Handle_err(err)
 			fmt.Println("Site involved: site3.")

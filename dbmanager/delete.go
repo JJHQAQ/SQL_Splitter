@@ -21,7 +21,7 @@ func (dbmp *DBM) Delete(sql_s string) State {
 	do_on_site4 := false
 	// fmt.Println(table_name)
 	if table_name == "book" {
-		// fmt.Println("do delete on book..")
+		fmt.Println("do delete on book..")
 		set := NewIntSet()
 		set_end := NewIntSet()
 		select_from_book1 := "SELECT id FROM book "
@@ -57,6 +57,8 @@ func (dbmp *DBM) Delete(sql_s string) State {
 		}
 		select_from_book1 += ";"
 		select_from_book2 += ";"
+		fmt.Println(select_from_book1)
+		fmt.Println(select_from_book2)
 		if select_book1 {
 			rows1, err1 := dbmp.Databases["site1"].Query(select_from_book1)
 			if err1 != nil {
@@ -94,6 +96,12 @@ func (dbmp *DBM) Delete(sql_s string) State {
 				// fmt.Println(id)
 			}
 		}
+		if len(set_end) == 0 && len(set) != 0 {
+			for num := range set {
+				set_end.Add(num)
+				fmt.Println(num)
+			}
+		}
 		sql_new := "DELETE FROM book WHERE id in ("
 		first := true
 		for num := range set_end {
@@ -105,10 +113,9 @@ func (dbmp *DBM) Delete(sql_s string) State {
 				sql_new += ("," + num_str)
 			}
 		}
-
 		if len(set_end) > 0 {
 			sql_new += ");"
-			// fmt.Println(sql_new)
+			fmt.Println(sql_new)
 			_, err3 := dbmp.Databases["site1"].Exec(sql_new)
 			if err3 != nil {
 				fmt.Println("Error executing DELETE statement: ", err3)
@@ -200,6 +207,7 @@ func (dbmp *DBM) Delete(sql_s string) State {
 			do_on_site2 = true
 			do_on_site3 = true
 		}
+		// fmt.Println(do_on_site1, "  ", do_on_site2, "  ", do_on_site3)
 	} else if table_name == "orders" {
 		submeter_key1 := false
 		submeter_key2 := false
@@ -421,7 +429,7 @@ func (dbmp *DBM) Delete(sql_s string) State {
 						}
 					}
 					sql_new += ");"
-					fmt.Println(sql_new)
+					// fmt.Println(sql_new)
 					_, err3 := dbmp.Databases["site1"].Exec(sql_new)
 					if err3 != nil {
 						fmt.Println("Error executing DELETE statement: ", err3)
