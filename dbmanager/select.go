@@ -385,6 +385,10 @@ func mergeMapsByKey(slice1, slice2 []map[string]interface{}, key string) []map[s
 
 // getColumns 获取列名
 func getColumns(items []map[string]interface{}) []string {
+	if len(items) == 0 {
+		return nil
+	}
+
 	var columns []string
 	for key := range items[0] {
 		columns = append(columns, key)

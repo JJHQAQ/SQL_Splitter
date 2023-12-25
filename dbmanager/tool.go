@@ -30,17 +30,25 @@ func PrintAll(tableName string, info map[string]interface{}) {
 	fmt.Println("查询结果:")
 	// 获取列名
 	columns := getColumns(info["items"].([]map[string]interface{}))
-	// 打印列名
-	fmt.Println(strings.Join(columns, "\t"))
-	// 打印数据
-	for _, item := range info["items"].([]map[string]interface{}) {
-		printRow(item, columns)
+
+	// 判断是否为空表
+	if columns == nil || len(columns) == 0 {
+		fmt.Println("查询的是空表")
+	} else {
+		// 打印列名
+		fmt.Println(strings.Join(columns, "\t"))
+
+		// 打印数据
+		for _, item := range info["items"].([]map[string]interface{}) {
+			printRow(item, columns)
+		}
+
+		fmt.Printf("表名：%s\n", tableName)
+		fmt.Printf("行数：%d\n", info["rowCount"].(int))
+		fmt.Printf("列数：%d\n", info["colCount"].(int))
+		fmt.Printf("站点：%v\n", info["siteNames"].([]string))
+		fmt.Println("---------------")
 	}
-	fmt.Printf("表名：%s\n", tableName)
-	fmt.Printf("行数：%d\n", info["rowCount"].(int))
-	fmt.Printf("列数：%d\n", info["colCount"].(int))
-	fmt.Printf("站点：%v\n", info["siteNames"].([]string))
-	fmt.Println("---------------")
 }
 
 func Merge(J_table map[string]interface{}, ori map[string]interface{}, table_name string) map[string]interface{} {
