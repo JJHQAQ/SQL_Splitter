@@ -76,6 +76,7 @@ func (dbmp *DBM) Insert(sql_s string) State {
 				return FAILED
 			}
 		}
+		// fmt.Println("xxxxxxxxxxxxxxx")
 		copies := values[4]
 		insert_stmt1 := "INSERT INTO book VALUES("
 		insert_stmt2 := "INSERT INTO book VALUES("
@@ -89,6 +90,9 @@ func (dbmp *DBM) Insert(sql_s string) State {
 		_, err2 := dbmp.Databases["site2"].Exec(insert_stmt2)
 		util.Handle_err(err2)
 		fmt.Println("Site involved: site2.")
+		if err1 != nil || err2 != nil {
+			return FAILED
+		}
 	} else if table_name == "customer" {
 		id := values[0]
 		id_num, err := strconv.Atoi(id)
